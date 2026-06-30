@@ -12,6 +12,10 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+// DatabaseName is the single logical database every collection-specific
+// repository in this package reads from and writes to.
+const DatabaseName = "omnirouter"
+
 // Adapter wraps a mongo.Client.
 type Adapter struct {
 	client *mongo.Client
@@ -36,6 +40,12 @@ func New(ctx context.Context, uri string) (*Adapter, error) {
 // Client exposes the underlying mongo client for repository implementations.
 func (a *Adapter) Client() *mongo.Client {
 	return a.client
+}
+
+// Database returns a handle to DatabaseName on the shared client.
+// Collection-specific repositories build their *mongo.Collection from this.
+func (a *Adapter) Database() *mongo.Database {
+	return a.client.Database(DatabaseName)
 }
 
 // Name implements ports.Pinger.

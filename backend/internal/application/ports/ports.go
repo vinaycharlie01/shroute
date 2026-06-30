@@ -3,7 +3,11 @@
 // the application layer never imports them directly, only these interfaces.
 package ports
 
-import "context"
+import (
+	"context"
+
+	"github.com/vinaycharlie01/shroute/backend/internal/domain/audit"
+)
 
 // Pinger is implemented by any outbound dependency adapter that can report
 // liveness (database pool, cache client, etc). Health checks depend only on
@@ -17,4 +21,12 @@ type Pinger interface {
 // explicit shutdown (connection pools, clients).
 type Closer interface {
 	Close() error
+}
+
+// AuditRepository persists and retrieves audit trail entries. The
+// application layer depends only on this interface; the concrete
+// implementation lives in adapters/outbound/mongodb.
+type AuditRepository interface {
+	Append(ctx context.Context, e audit.Entry) (audit.Entry, error)
+	List(ctx context.Context, limit int) ([]audit.Entry, error)
 }

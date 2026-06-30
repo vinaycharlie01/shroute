@@ -13,6 +13,7 @@ import (
 // RouterConfig carries the dependencies needed to build the router.
 type RouterConfig struct {
 	Health         *handlers.Health
+	Audit          *handlers.Audit
 	AllowedOrigins []string
 }
 
@@ -23,6 +24,11 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	mux.HandleFunc("GET /healthz", cfg.Health.Live)
 	mux.HandleFunc("GET /readyz", cfg.Health.Ready)
+
+	if cfg.Audit != nil {
+		mux.HandleFunc("POST /api/audit", cfg.Audit.Record)
+		mux.HandleFunc("GET /api/audit", cfg.Audit.List)
+	}
 
 	var handler http.Handler = mux
 	handler = middleware.CORS(cfg.AllowedOrigins)(handler)

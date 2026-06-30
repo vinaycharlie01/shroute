@@ -12,6 +12,7 @@ import (
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/inbound/http/handlers"
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/mongodb"
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/redis"
+	auditapp "github.com/vinaycharlie01/shroute/backend/internal/application/audit"
 	healthapp "github.com/vinaycharlie01/shroute/backend/internal/application/health"
 	"github.com/vinaycharlie01/shroute/backend/internal/application/ports"
 	"github.com/vinaycharlie01/shroute/backend/internal/infrastructure/config"
@@ -37,6 +38,7 @@ func New(ctx context.Context, cfg *config.Config) (*Container, error) {
 	c := &Container{Config: cfg}
 
 	var deps []ports.Pinger
+	var auditHandler *handlers.Audit
 
 	if cfg.Mongo.Enabled {
 		mg, err := mongodb.New(ctx, cfg.Mongo.URI)
@@ -45,6 +47,10 @@ func New(ctx context.Context, cfg *config.Config) (*Container, error) {
 		}
 		deps = append(deps, mg)
 		c.closers = append(c.closers, mg)
+
+		auditRepo := mongodb.NewAuditRepository(mg.Database())
+		auditService := auditapp.NewService(auditRepo)
+		auditHandler = handlers.NewAudit(auditService)
 	}
 
 	if cfg.Redis.Enabled {
@@ -61,6 +67,7 @@ func New(ctx context.Context, cfg *config.Config) (*Container, error) {
 
 	router := httpadapter.NewRouter(httpadapter.RouterConfig{
 		Health:         healthHandler,
+		Audit:          auditHandler,
 		AllowedOrigins: cfg.Server.AllowedOrigins,
 	})
 
