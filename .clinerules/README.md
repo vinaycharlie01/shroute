@@ -8,8 +8,12 @@ files be toggled on/off from the Cline UI without editing content.
   design patterns, TDD/table-driven testing, YAML/env config, slog logging,
   and the lint-first workflow. This is the condensed counterpart to the
   root `CLAUDE.md`, which Claude Code reads instead of this folder.
+- `workflows/` — project-specific `/<name>` slash-command workflows (see
+  its own `README.md`); empty placeholder for now.
 
 Keep this folder and `CLAUDE.md` in sync if you change either — they
 encode the same ruleset for two different tools. Add new files here
 (e.g. `02-<topic>.md`) rather than growing the existing file unboundedly
-once a section becomes large enough to stand on its own.
+once a section becomes large enough to stand on its own. Cline merges every
+`.md`/`.txt` file directly under `.clinerules/` into one context block, so
+keep each file under ~150 lines and scoped to one concern.
