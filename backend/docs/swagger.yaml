@@ -1,0 +1,130 @@
+basePath: /
+definitions:
+  handlers.cacheEntryResponse:
+    properties:
+      key:
+        type: string
+      size_bytes:
+        type: integer
+      ttl:
+        type: string
+    type: object
+  handlers.cacheFlushResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.cacheListResponse:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/handlers.cacheEntryResponse'
+        type: array
+    type: object
+  handlers.cacheStatsResponse:
+    properties:
+      entry_count:
+        type: integer
+      hits:
+        type: integer
+      misses:
+        type: integer
+      size_bytes:
+        type: integer
+    type: object
+  handlers.errorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Vinay Kumar V
+    url: https://github.com/vinaycharlie01
+  description: |-
+    OmniRouter backend exposing cache management, health
+    checks, and audit trail endpoints.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://github.com/vinaycharlie01/shroute
+  title: OmniRouter API
+  version: 1.0.0
+paths:
+  /api/cache/entries:
+    get:
+      description: Returns cache entries matching the given key prefix, up to the
+        requested limit.
+      parameters:
+      - description: Key prefix to filter by
+        in: query
+        name: prefix
+        required: true
+        type: string
+      - description: Maximum entries to return (default 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.cacheListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: List cache entries
+      tags:
+      - Cache
+  /api/cache/flush:
+    post:
+      description: Removes cache entries matching the given prefix. Pass all=true
+        with no prefix to flush the entire Redis database.
+      parameters:
+      - description: Key prefix to flush
+        in: query
+        name: prefix
+        type: string
+      - description: When true and no prefix, flushes entire cache
+        in: query
+        name: all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.cacheFlushResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Flush cache entries
+      tags:
+      - Cache
+  /api/cache/stats:
+    get:
+      description: Returns aggregate cache hit/miss counters, memory usage, and entry
+        count.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.cacheStatsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Get cache statistics
+      tags:
+      - Cache
+schemes:
+- http
+swagger: "2.0"

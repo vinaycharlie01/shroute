@@ -1,0 +1,191 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "OmniRouter backend exposing cache management, health\nchecks, and audit trail endpoints.",
+        "title": "OmniRouter API",
+        "termsOfService": "https://github.com/vinaycharlie01/shroute",
+        "contact": {
+            "name": "Vinay Kumar V",
+            "url": "https://github.com/vinaycharlie01"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/cache/entries": {
+            "get": {
+                "description": "Returns cache entries matching the given key prefix, up to the requested limit.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "List cache entries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Key prefix to filter by",
+                        "name": "prefix",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum entries to return (default 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.cacheListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/cache/flush": {
+            "post": {
+                "description": "Removes cache entries matching the given prefix. Pass all=true with no prefix to flush the entire Redis database.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "Flush cache entries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Key prefix to flush",
+                        "name": "prefix",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "When true and no prefix, flushes entire cache",
+                        "name": "all",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.cacheFlushResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/cache/stats": {
+            "get": {
+                "description": "Returns aggregate cache hit/miss counters, memory usage, and entry count.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "Get cache statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.cacheStatsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.cacheEntryResponse": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "size_bytes": {
+                    "type": "integer"
+                },
+                "ttl": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.cacheFlushResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.cacheListResponse": {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.cacheEntryResponse"
+                    }
+                }
+            }
+        },
+        "handlers.cacheStatsResponse": {
+            "type": "object",
+            "properties": {
+                "entry_count": {
+                    "type": "integer"
+                },
+                "hits": {
+                    "type": "integer"
+                },
+                "misses": {
+                    "type": "integer"
+                },
+                "size_bytes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.errorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

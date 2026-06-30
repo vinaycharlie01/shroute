@@ -1,12 +1,15 @@
 // Package ports declares the outbound interfaces the application core
 // depends on. Concrete implementations live in internal/adapters/outbound;
 // the application layer never imports them directly, only these interfaces.
+//
+//go:generate counterfeiter -generate
 package ports
 
 import (
 	"context"
 
 	"github.com/vinaycharlie01/shroute/backend/internal/domain/audit"
+	"github.com/vinaycharlie01/shroute/backend/internal/domain/cache"
 )
 
 // Pinger is implemented by any outbound dependency adapter that can report
@@ -26,7 +29,20 @@ type Closer interface {
 // AuditRepository persists and retrieves audit trail entries. The
 // application layer depends only on this interface; the concrete
 // implementation lives in adapters/outbound/mongodb.
+//
+//counterfeiter:generate . AuditRepository
 type AuditRepository interface {
 	Append(ctx context.Context, e audit.Entry) (audit.Entry, error)
 	List(ctx context.Context, limit int) ([]audit.Entry, error)
+}
+
+// CacheStore provides cache management operations backed by Redis.
+// Stats returns aggregate statistics, List returns recent entries by
+// prefix, and Flush removes every key matching the prefix.
+//
+//counterfeiter:generate . CacheStore
+type CacheStore interface {
+	Stats(ctx context.Context) (cache.Stats, error)
+	List(ctx context.Context, prefix string, limit int) ([]cache.Entry, error)
+	Flush(ctx context.Context, prefix string) error
 }

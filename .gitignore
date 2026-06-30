@@ -36,6 +36,9 @@ frontend/node_modules/
 frontend/dist/
 frontend/.next/
 
+# Swag auto-generated OpenAPI docs (regenerated via mage gen)
+backend/docs/docs.go
+
 # Editor/IDE
 # .idea/
 # .vscode/

@@ -28,6 +28,12 @@ func NewAudit(svc auditRecorder) *Audit {
 	return &Audit{svc: svc}
 }
 
+// RegisterRoutes implements httpadapter.RouteRegistrar.
+func (h *Audit) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("POST /api/audit", h.Record)
+	mux.HandleFunc("GET /api/audit", h.List)
+}
+
 type auditEntryResponse struct {
 	ID        string         `json:"id,omitempty"`
 	Actor     string         `json:"actor"`

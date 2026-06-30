@@ -9,16 +9,21 @@ import (
 	"log/slog"
 
 	httpadapter "github.com/vinaycharlie01/shroute/backend/internal/adapters/inbound/http"
-	"github.com/vinaycharlie01/shroute/backend/internal/adapters/inbound/http/handlers"
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/mongodb"
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/redis"
-	auditapp "github.com/vinaycharlie01/shroute/backend/internal/application/audit"
-	healthapp "github.com/vinaycharlie01/shroute/backend/internal/application/health"
 	"github.com/vinaycharlie01/shroute/backend/internal/application/ports"
 	"github.com/vinaycharlie01/shroute/backend/internal/infrastructure/config"
 	"github.com/vinaycharlie01/shroute/backend/internal/infrastructure/logger"
 	"github.com/vinaycharlie01/shroute/backend/internal/infrastructure/server"
 )
+
+// defaultFeatures is the set of pluggable feature modules wired on every
+// startup. Add a new feature here and implement the Feature interface — the
+// rest of New stays unchanged.
+var defaultFeatures = []Feature{
+	auditFeature{},
+	cacheFeature{},
+}
 
 // Container holds every wired component needed to run the service.
 type Container struct {
@@ -37,20 +42,16 @@ func New(ctx context.Context, cfg *config.Config) (*Container, error) {
 
 	c := &Container{Config: cfg}
 
-	var deps []ports.Pinger
-	var auditHandler *handlers.Audit
+	// 1. Start shared outbound adapters.
+	registry := &SharedRegistry{}
 
 	if cfg.Mongo.Enabled {
 		mg, err := mongodb.New(ctx, cfg.Mongo.URI)
 		if err != nil {
 			return nil, fmt.Errorf("di: mongodb: %w", err)
 		}
-		deps = append(deps, mg)
+		registry.Mongo = mg
 		c.closers = append(c.closers, mg)
-
-		auditRepo := mongodb.NewAuditRepository(mg.Database())
-		auditService := auditapp.NewService(auditRepo)
-		auditHandler = handlers.NewAudit(auditService)
 	}
 
 	if cfg.Redis.Enabled {
@@ -58,16 +59,30 @@ func New(ctx context.Context, cfg *config.Config) (*Container, error) {
 		if err != nil {
 			return nil, fmt.Errorf("di: redis: %w", err)
 		}
-		deps = append(deps, rd)
+		registry.Redis = rd
 		c.closers = append(c.closers, rd)
 	}
 
-	healthService := healthapp.NewService(deps...)
-	healthHandler := handlers.NewHealth(healthService)
+	// 2. Wire every pluggable feature.
+	var allRoutes []httpadapter.RouteRegistrar
+	var allPingers []ports.Pinger
+
+	for _, f := range defaultFeatures {
+		out, err := f.Wire(ctx, cfg, registry)
+		if err != nil {
+			return nil, fmt.Errorf("di: feature: %w", err)
+		}
+		allRoutes = append(allRoutes, out.Routes...)
+		allPingers = append(allPingers, out.Pingers...)
+		c.closers = append(c.closers, out.Closers...)
+	}
+
+	// 3. Health is special: it aggregates all Pingers from every feature.
+	// It is always registered so the service has a consistent health endpoint.
+	allRoutes = append(allRoutes, newHealthHandler(allPingers...))
 
 	router := httpadapter.NewRouter(httpadapter.RouterConfig{
-		Health:         healthHandler,
-		Audit:          auditHandler,
+		Routes:         allRoutes,
 		AllowedOrigins: cfg.Server.AllowedOrigins,
 	})
 

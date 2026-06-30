@@ -67,12 +67,18 @@ type GoConfig struct {
 	Race        *RaceConfig        `yaml:"race,omitempty"`
 	Coverage    *CoverageConfig    `yaml:"coverage,omitempty"`
 	Bench       *BenchConfig       `yaml:"bench,omitempty"`
+	Generate    *GenerateConfig    `yaml:"generate,omitempty"`
 	Lint        *LintConfig        `yaml:"lint,omitempty"`
 	Vet         *VetConfig         `yaml:"vet,omitempty"`
 	Format      *FormatConfig      `yaml:"format,omitempty"`
 	Install     *InstallConfig     `yaml:"install,omitempty"`
 	Govulncheck *GovulncheckConfig `yaml:"govulncheck,omitempty"`
 	CrossBuild  *CrossBuildConfig  `yaml:"crossBuild,omitempty"`
+}
+
+// GenerateConfig contains options for running go generate.
+type GenerateConfig struct {
+	Packages []string `yaml:"packages,omitempty"`
 }
 
 // SetupOptions contains options for setting up Go environment
@@ -641,6 +647,37 @@ func (g *GoRunner) InstallFromConfig() error {
 	return nil
 }
 
+// GenerateFromConfig runs go generate using loaded config.
+func (g *GoRunner) GenerateFromConfig() error {
+	if g.config == nil {
+		return fmt.Errorf("no configuration loaded")
+	}
+	if g.config.Generate == nil {
+		return fmt.Errorf("no generate configuration found")
+	}
+
+	dir := g.config.Directory
+	if dir == "" {
+		dir = "."
+	}
+
+	slog.Info("Running go generate...", "directory", dir)
+	start := time.Now()
+
+	generateArgs := g.config.Generate.Packages
+	if len(generateArgs) == 0 {
+		generateArgs = []string{"./..."}
+	}
+
+	if err := g.RunInDir(dir, "generate", generateArgs...); err != nil {
+		return err
+	}
+
+	slog.Info("Go generate complete", "duration", time.Since(start))
+
+	return nil
+}
+
 // GovulncheckFromConfig runs govulncheck using loaded config
 func (g *GoRunner) GovulncheckFromConfig() error {
 	if g.config == nil {
@@ -783,6 +820,9 @@ func Install() error { return defaultRunner.InstallFromConfig() }
 
 // Govulncheck runs govulncheck (requires loaded config)
 func Govulncheck() error { return defaultRunner.GovulncheckFromConfig() }
+
+// Generate runs go generate across all packages (requires loaded config)
+func Generate() error { return defaultRunner.GenerateFromConfig() }
 
 // CrossBuild cross-compiles for all configured platforms (requires loaded config)
 func CrossBuild() error { return defaultRunner.CrossBuildFromConfig() }

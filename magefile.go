@@ -75,6 +75,10 @@ func Integration() error { return gomagex.Integration() }
 // darwin/arm64 (config: go.yaml → crossBuild).
 func BuildLinux() error { return gomagex.CrossBuild() }
 
+// Gen runs go generate across the backend to regenerate counterfeiter mocks
+// (portsfakes) and any other code generated from //go:generate directives.
+func Gen() error { return gomagex.Generate() }
+
 // Clean removes build artefacts.
 func Clean() error {
 	fmt.Println("cleaning backend/dist/")

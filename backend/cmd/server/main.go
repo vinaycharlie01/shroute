@@ -1,6 +1,25 @@
 // Command server is the OmniRouter backend entrypoint: it loads
 // configuration, wires the dependency-injection container, and runs the
 // HTTP server until an OS signal requests a graceful shutdown.
+//
+// @title           OmniRouter API
+// @version         1.0.0
+// @description     OmniRouter backend exposing cache management, health
+// @description     checks, and audit trail endpoints.
+// @termsOfService  https://github.com/vinaycharlie01/shroute
+
+// @contact.name   Vinay Kumar V
+// @contact.url    https://github.com/vinaycharlie01
+
+// @license.name  MIT
+// @license.url   https://opensource.org/licenses/MIT
+
+// @host      localhost:8080
+// @schemes   http
+
+// @BasePath  /
+
+//go:generate swag init --output ../../docs --dir .,../../internal --outputTypes json,yaml 2>/dev/null
 package main
 
 import (

@@ -43,6 +43,10 @@ bench:
   args:
     - "-timeout=120s"
 
+generate:
+  packages:
+    - ./...
+
 lint:
   args: []
 
