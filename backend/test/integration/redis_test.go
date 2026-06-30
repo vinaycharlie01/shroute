@@ -7,10 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/testcontainers/testcontainers-go"
-	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
-
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/redis"
+	"github.com/vinaycharlie01/shroute/backend/test/containers"
 )
 
 func TestAdapter_PingAgainstRealRedis(t *testing.T) {
@@ -19,20 +17,7 @@ func TestAdapter_PingAgainstRealRedis(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	container, err := tcredis.Run(ctx, "redis:7-alpine")
-	if err != nil {
-		t.Fatalf("start redis container: %v", err)
-	}
-	t.Cleanup(func() {
-		if err := testcontainers.TerminateContainer(container); err != nil {
-			t.Logf("terminate redis container: %v", err)
-		}
-	})
-
-	addr, err := container.Endpoint(ctx, "")
-	if err != nil {
-		t.Fatalf("endpoint: %v", err)
-	}
+	addr := containers.Redis(ctx, t)
 
 	adapter, err := redis.New(ctx, addr, "", 0)
 	if err != nil {

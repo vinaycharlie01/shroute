@@ -7,10 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/testcontainers/testcontainers-go"
-	tcmongodb "github.com/testcontainers/testcontainers-go/modules/mongodb"
-
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/mongodb"
+	"github.com/vinaycharlie01/shroute/backend/test/containers"
 )
 
 func TestAdapter_PingAgainstRealMongoDB(t *testing.T) {
@@ -19,20 +17,7 @@ func TestAdapter_PingAgainstRealMongoDB(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	container, err := tcmongodb.Run(ctx, "mongo:7")
-	if err != nil {
-		t.Fatalf("start mongodb container: %v", err)
-	}
-	t.Cleanup(func() {
-		if err := testcontainers.TerminateContainer(container); err != nil {
-			t.Logf("terminate mongodb container: %v", err)
-		}
-	})
-
-	uri, err := container.ConnectionString(ctx)
-	if err != nil {
-		t.Fatalf("connection string: %v", err)
-	}
+	uri := containers.MongoDB(ctx, t)
 
 	adapter, err := mongodb.New(ctx, uri)
 	if err != nil {
