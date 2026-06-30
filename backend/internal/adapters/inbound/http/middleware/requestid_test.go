@@ -17,7 +17,7 @@ func TestRequestID_GeneratesWhenAbsent(t *testing.T) {
 	})
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 
 	middleware.RequestID(next).ServeHTTP(rec, req)
 
@@ -40,7 +40,7 @@ func TestRequestID_ReusesInboundHeader(t *testing.T) {
 	})
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set(middleware.RequestIDHeader, inboundID)
 
 	middleware.RequestID(next).ServeHTTP(rec, req)

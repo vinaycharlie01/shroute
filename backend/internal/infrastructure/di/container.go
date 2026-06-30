@@ -87,5 +87,6 @@ func (c *Container) Close() error {
 			firstErr = err
 		}
 	}
+
 	return firstErr
 }

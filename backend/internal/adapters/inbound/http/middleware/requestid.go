@@ -34,5 +34,6 @@ func RequestID(next http.Handler) http.Handler {
 // RequestIDFromContext extracts the request ID stored by RequestID, if any.
 func RequestIDFromContext(ctx context.Context) string {
 	id, _ := ctx.Value(RequestIDKey).(string)
+
 	return id
 }

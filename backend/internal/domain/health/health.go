@@ -34,5 +34,6 @@ func Overall(deps []DependencyStatus) State {
 			return StateDegraded
 		}
 	}
+
 	return StateUp
 }

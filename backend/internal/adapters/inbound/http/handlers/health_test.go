@@ -22,7 +22,7 @@ func TestHealth_Live(t *testing.T) {
 
 	h := handlers.NewHealth(stubChecker{})
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil)
 
 	h.Live(rec, req)
 
@@ -79,7 +79,7 @@ func TestHealth_Ready(t *testing.T) {
 
 			h := handlers.NewHealth(stubChecker{status: tt.status})
 			rec := httptest.NewRecorder()
-			req := httptest.NewRequest(http.MethodGet, "/readyz", nil)
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/readyz", nil)
 
 			h.Ready(rec, req)
 

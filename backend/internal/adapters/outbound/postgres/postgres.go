@@ -25,6 +25,7 @@ func New(ctx context.Context, dsn string) (*Adapter, error) {
 
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
+
 		return nil, fmt.Errorf("postgres: ping: %w", err)
 	}
 
@@ -49,5 +50,6 @@ func (a *Adapter) Ping(ctx context.Context) error {
 // Close implements ports.Closer.
 func (a *Adapter) Close() error {
 	a.pool.Close()
+
 	return nil
 }

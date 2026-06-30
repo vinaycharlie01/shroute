@@ -27,6 +27,7 @@ func (d *Duration) UnmarshalYAML(value *yaml.Node) error {
 	}
 
 	*d = Duration(parsed)
+
 	return nil
 }
 

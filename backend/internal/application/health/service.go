@@ -52,5 +52,6 @@ func pingOne(ctx context.Context, dep ports.Pinger) domainhealth.DependencyStatu
 			Error: err.Error(),
 		}
 	}
+
 	return domainhealth.DependencyStatus{Name: dep.Name(), State: domainhealth.StateUp}
 }

@@ -55,11 +55,12 @@ func Load(configDir, dotenvPath, env string) (*Config, error) {
 // when the file is absent or omits them. A missing overlay file (e.g. no
 // config.production.yaml) is not an error.
 func mergeYAML(cfg *Config, path string) error {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // path is built from the trusted configDir startup parameter, not external input
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil
 		}
+
 		return fmt.Errorf("config: read %s: %w", path, err)
 	}
 

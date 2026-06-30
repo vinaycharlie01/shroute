@@ -18,7 +18,7 @@ func TestCORS_AllowsListedOrigin(t *testing.T) {
 	})
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Origin", "https://example.com")
 
 	middleware.CORS([]string{"https://example.com"})(next).ServeHTTP(rec, req)
@@ -39,7 +39,7 @@ func TestCORS_RejectsUnlistedOrigin(t *testing.T) {
 	})
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Origin", "https://evil.example.com")
 
 	middleware.CORS([]string{"https://example.com"})(next).ServeHTTP(rec, req)
@@ -57,7 +57,7 @@ func TestCORS_WildcardAllowsAnyOrigin(t *testing.T) {
 	})
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set("Origin", "https://anywhere.example.com")
 
 	middleware.CORS([]string{"*"})(next).ServeHTTP(rec, req)
@@ -77,7 +77,7 @@ func TestCORS_PreflightOptionsShortCircuits(t *testing.T) {
 	})
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodOptions, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodOptions, "/", nil)
 	req.Header.Set("Origin", "https://example.com")
 
 	middleware.CORS([]string{"https://example.com"})(next).ServeHTTP(rec, req)

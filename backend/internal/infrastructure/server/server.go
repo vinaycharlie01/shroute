@@ -54,6 +54,7 @@ func (s *Server) Run(ctx context.Context) error {
 		s.log.Info("http_server_starting", "addr", s.httpServer.Addr)
 		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- fmt.Errorf("server: listen and serve: %w", err)
+
 			return
 		}
 		errCh <- nil
@@ -64,14 +65,20 @@ func (s *Server) Run(ctx context.Context) error {
 		return err
 	case <-ctx.Done():
 		s.log.Info("http_server_shutting_down")
+		// context.Background() is intentional here: ctx is already done
+		// (that's why we're in this branch), so deriving the shutdown
+		// deadline from it would cancel immediately and skip the grace
+		// period entirely.
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 		defer cancel()
 
+		//nolint:contextcheck // shutdownCtx is intentionally derived from context.Background(), see comment above
 		if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
 			return fmt.Errorf("server: shutdown: %w", err)
 		}
 
 		s.log.Info("http_server_stopped")
+
 		return nil
 	}
 }
