@@ -10,7 +10,7 @@ import (
 
 	httpadapter "github.com/vinaycharlie01/shroute/backend/internal/adapters/inbound/http"
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/inbound/http/handlers"
-	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/postgres"
+	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/mongodb"
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/outbound/redis"
 	healthapp "github.com/vinaycharlie01/shroute/backend/internal/application/health"
 	"github.com/vinaycharlie01/shroute/backend/internal/application/ports"
@@ -22,7 +22,6 @@ import (
 // Container holds every wired component needed to run the service.
 type Container struct {
 	Config *config.Config
-	Logger *slog.Logger
 	Server *server.Server
 
 	closers []ports.Closer
@@ -33,18 +32,19 @@ type Container struct {
 // the HTTP server.
 func New(ctx context.Context, cfg *config.Config) (*Container, error) {
 	log := logger.New(logger.Config{Level: cfg.Log.Level, Format: cfg.Log.Format})
+	slog.SetDefault(log)
 
-	c := &Container{Config: cfg, Logger: log}
+	c := &Container{Config: cfg}
 
 	var deps []ports.Pinger
 
-	if cfg.Postgres.Enabled {
-		pg, err := postgres.New(ctx, cfg.Postgres.DSN)
+	if cfg.Mongo.Enabled {
+		mg, err := mongodb.New(ctx, cfg.Mongo.URI)
 		if err != nil {
-			return nil, fmt.Errorf("di: postgres: %w", err)
+			return nil, fmt.Errorf("di: mongodb: %w", err)
 		}
-		deps = append(deps, pg)
-		c.closers = append(c.closers, pg)
+		deps = append(deps, mg)
+		c.closers = append(c.closers, mg)
 	}
 
 	if cfg.Redis.Enabled {
@@ -60,7 +60,6 @@ func New(ctx context.Context, cfg *config.Config) (*Container, error) {
 	healthHandler := handlers.NewHealth(healthService)
 
 	router := httpadapter.NewRouter(httpadapter.RouterConfig{
-		Logger:         log,
 		Health:         healthHandler,
 		AllowedOrigins: cfg.Server.AllowedOrigins,
 	})
@@ -72,7 +71,6 @@ func New(ctx context.Context, cfg *config.Config) (*Container, error) {
 		ReadTimeout:     cfg.Server.ReadTimeout.Duration(),
 		WriteTimeout:    cfg.Server.WriteTimeout.Duration(),
 		ShutdownTimeout: cfg.Server.ShutdownTimeout.Duration(),
-		Logger:          log,
 	})
 
 	return c, nil

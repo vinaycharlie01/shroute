@@ -17,13 +17,13 @@ func TestOverall(t *testing.T) {
 		{name: "no dependencies", deps: nil, want: health.StateUp},
 		{
 			name: "all up",
-			deps: []health.DependencyStatus{{Name: "postgres", State: health.StateUp}},
+			deps: []health.DependencyStatus{{Name: "mongodb", State: health.StateUp}},
 			want: health.StateUp,
 		},
 		{
 			name: "one down",
 			deps: []health.DependencyStatus{
-				{Name: "postgres", State: health.StateUp},
+				{Name: "mongodb", State: health.StateUp},
 				{Name: "redis", State: health.StateDown},
 			},
 			want: health.StateDegraded,

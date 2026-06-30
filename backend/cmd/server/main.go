@@ -40,11 +40,11 @@ func run() error {
 	}
 	defer func() {
 		if closeErr := container.Close(); closeErr != nil {
-			container.Logger.Error("shutdown_cleanup_failed", "error", closeErr)
+			slog.Error("shutdown_cleanup_failed", "error", closeErr)
 		}
 	}()
 
-	container.Logger.Info("starting",
+	slog.Info("starting",
 		"env", cfg.Env,
 		"version", version.Version,
 		"commit", version.Commit,

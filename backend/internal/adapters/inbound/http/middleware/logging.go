@@ -24,13 +24,13 @@ func (r *statusRecorder) WriteHeader(status int) {
 // duration, and request ID. It attaches a request-scoped logger (carrying
 // the request ID) to the request context for downstream handlers to use via
 // logger.FromContext.
-func Logging(base *slog.Logger) func(http.Handler) http.Handler {
+func Logging() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 			requestID := RequestIDFromContext(r.Context())
 
-			reqLog := base.With("request_id", requestID)
+			reqLog := slog.Default().With("request_id", requestID)
 			ctx := logger.WithContext(r.Context(), reqLog)
 
 			rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}

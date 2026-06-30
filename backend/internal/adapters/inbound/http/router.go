@@ -4,7 +4,6 @@
 package httpadapter
 
 import (
-	"log/slog"
 	"net/http"
 
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/inbound/http/handlers"
@@ -13,7 +12,6 @@ import (
 
 // RouterConfig carries the dependencies needed to build the router.
 type RouterConfig struct {
-	Logger         *slog.Logger
 	Health         *handlers.Health
 	AllowedOrigins []string
 }
@@ -29,7 +27,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	var handler http.Handler = mux
 	handler = middleware.CORS(cfg.AllowedOrigins)(handler)
 	handler = middleware.Recover(handler)
-	handler = middleware.Logging(cfg.Logger)(handler)
+	handler = middleware.Logging()(handler)
 	handler = middleware.RequestID(handler)
 
 	return handler

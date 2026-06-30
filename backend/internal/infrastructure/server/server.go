@@ -15,7 +15,6 @@ import (
 // Server wraps a standard http.Server.
 type Server struct {
 	httpServer      *http.Server
-	log             *slog.Logger
 	shutdownTimeout time.Duration
 }
 
@@ -27,7 +26,6 @@ type Config struct {
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration
 	ShutdownTimeout time.Duration
-	Logger          *slog.Logger
 }
 
 // New builds a Server from cfg.
@@ -39,7 +37,6 @@ func New(cfg Config) *Server {
 			ReadTimeout:  cfg.ReadTimeout,
 			WriteTimeout: cfg.WriteTimeout,
 		},
-		log:             cfg.Logger,
 		shutdownTimeout: cfg.ShutdownTimeout,
 	}
 }
@@ -51,7 +48,7 @@ func (s *Server) Run(ctx context.Context) error {
 	errCh := make(chan error, 1)
 
 	go func() {
-		s.log.Info("http_server_starting", "addr", s.httpServer.Addr)
+		slog.Info("http_server_starting", "addr", s.httpServer.Addr)
 		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- fmt.Errorf("server: listen and serve: %w", err)
 
@@ -64,7 +61,7 @@ func (s *Server) Run(ctx context.Context) error {
 	case err := <-errCh:
 		return err
 	case <-ctx.Done():
-		s.log.Info("http_server_shutting_down")
+		slog.Info("http_server_shutting_down")
 		// context.Background() is intentional here: ctx is already done
 		// (that's why we're in this branch), so deriving the shutdown
 		// deadline from it would cancel immediately and skip the grace
@@ -77,7 +74,7 @@ func (s *Server) Run(ctx context.Context) error {
 			return fmt.Errorf("server: shutdown: %w", err)
 		}
 
-		s.log.Info("http_server_stopped")
+		slog.Info("http_server_stopped")
 
 		return nil
 	}

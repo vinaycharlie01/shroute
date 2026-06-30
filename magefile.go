@@ -65,7 +65,7 @@ func Bench() error { return gomagex.Bench() }
 // Govulncheck runs govulncheck for vulnerability scanning (config: go.yaml → govulncheck).
 func Govulncheck() error { return gomagex.Govulncheck() }
 
-// Integration runs the integration test suite against live Postgres/Redis
+// Integration runs the integration test suite against live MongoDB/Redis
 // testcontainers. Requires Docker to be available on the host
 // (config: go.yaml → integration; tests are guarded by the "integration"
 // build tag).

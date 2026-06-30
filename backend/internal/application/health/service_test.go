@@ -36,7 +36,7 @@ func TestService_Check(t *testing.T) {
 
 	t.Run("all dependencies healthy", func(t *testing.T) {
 		t.Parallel()
-		svc := healthapp.NewService(fakePinger{name: "postgres"}, fakePinger{name: "redis"})
+		svc := healthapp.NewService(fakePinger{name: "mongodb"}, fakePinger{name: "redis"})
 		status := svc.Check(context.Background())
 
 		if status.State != domainhealth.StateUp {
@@ -51,7 +51,7 @@ func TestService_Check(t *testing.T) {
 		t.Parallel()
 		failure := errors.New("connection refused")
 		svc := healthapp.NewService(
-			fakePinger{name: "postgres"},
+			fakePinger{name: "mongodb"},
 			fakePinger{name: "redis", err: failure},
 		)
 		status := svc.Check(context.Background())

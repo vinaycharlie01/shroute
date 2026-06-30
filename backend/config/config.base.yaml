@@ -16,9 +16,9 @@ log:
   level: info
   format: console
 
-postgres:
+mongo:
   enabled: false
-  dsn: ""
+  uri: ""
 
 redis:
   enabled: false

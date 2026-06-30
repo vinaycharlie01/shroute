@@ -4,6 +4,6 @@ log:
   level: info
   format: json
 
-# Secrets (postgres.dsn, redis.password, etc) must never be committed here —
-# set them via environment variables (APP_POSTGRES_DSN, APP_REDIS_PASSWORD,
+# Secrets (mongo.uri, redis.password, etc) must never be committed here —
+# set them via environment variables (APP_MONGO_URI, APP_REDIS_PASSWORD,
 # ...) or a .env file excluded from version control. See backend/.env.example.

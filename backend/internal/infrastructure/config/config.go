@@ -38,11 +38,11 @@ func (d Duration) Duration() time.Duration {
 
 // Config is the root, strongly-typed application configuration.
 type Config struct {
-	Env      string         `yaml:"env" validate:"required,oneof=local development staging production"`
-	Server   ServerConfig   `yaml:"server" validate:"required"`
-	Log      LogConfig      `yaml:"log" validate:"required"`
-	Postgres PostgresConfig `yaml:"postgres"`
-	Redis    RedisConfig    `yaml:"redis"`
+	Env    string       `yaml:"env" validate:"required,oneof=local development staging production"`
+	Server ServerConfig `yaml:"server" validate:"required"`
+	Log    LogConfig    `yaml:"log" validate:"required"`
+	Mongo  MongoConfig  `yaml:"mongo"`
+	Redis  RedisConfig  `yaml:"redis"`
 }
 
 // ServerConfig controls the inbound HTTP server.
@@ -61,16 +61,16 @@ type LogConfig struct {
 	Format string `yaml:"format" validate:"required,oneof=json console"`
 }
 
-// PostgresConfig controls the Postgres outbound adapter. Enabled defaults to
+// MongoConfig controls the MongoDB outbound adapter. Enabled defaults to
 // false so the foundation runs with zero external dependencies until a
 // feature actually needs persistence.
-type PostgresConfig struct {
+type MongoConfig struct {
 	Enabled bool   `yaml:"enabled"`
-	DSN     string `yaml:"dsn" validate:"required_if=Enabled true"`
+	URI     string `yaml:"uri" validate:"required_if=Enabled true"`
 }
 
 // RedisConfig controls the Redis outbound adapter. Enabled defaults to false
-// for the same reason as PostgresConfig.
+// for the same reason as MongoConfig.
 type RedisConfig struct {
 	Enabled  bool   `yaml:"enabled"`
 	Addr     string `yaml:"addr" validate:"required_if=Enabled true"`

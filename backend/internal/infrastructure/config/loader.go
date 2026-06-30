@@ -94,9 +94,9 @@ func applyEnvOverrides(cfg *Config) {
 	if v := os.Getenv("APP_LOG_FORMAT"); v != "" {
 		cfg.Log.Format = v
 	}
-	if v := os.Getenv("APP_POSTGRES_DSN"); v != "" {
-		cfg.Postgres.DSN = v
-		cfg.Postgres.Enabled = true
+	if v := os.Getenv("APP_MONGO_URI"); v != "" {
+		cfg.Mongo.URI = v
+		cfg.Mongo.Enabled = true
 	}
 	if v := os.Getenv("APP_REDIS_ADDR"); v != "" {
 		cfg.Redis.Addr = v
