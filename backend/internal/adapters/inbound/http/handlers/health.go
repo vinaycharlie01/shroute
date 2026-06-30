@@ -27,6 +27,12 @@ func NewHealth(checker healthChecker) *Health {
 	return &Health{checker: checker}
 }
 
+// RegisterRoutes implements httpadapter.RouteRegistrar.
+func (h *Health) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /healthz", h.Live)
+	mux.HandleFunc("GET /readyz", h.Ready)
+}
+
 type healthResponse struct {
 	Status       string             `json:"status"`
 	Dependencies []dependencyStatus `json:"dependencies,omitempty"`

@@ -6,14 +6,19 @@ package httpadapter
 import (
 	"net/http"
 
-	"github.com/vinaycharlie01/shroute/backend/internal/adapters/inbound/http/handlers"
 	"github.com/vinaycharlie01/shroute/backend/internal/adapters/inbound/http/middleware"
 )
 
+// RouteRegistrar is the interface handlers implement to self-register their
+// HTTP routes on the mux. Any handler that implements this interface can be
+// plugged into the router without changing RouterConfig.
+type RouteRegistrar interface {
+	RegisterRoutes(mux *http.ServeMux)
+}
+
 // RouterConfig carries the dependencies needed to build the router.
 type RouterConfig struct {
-	Health         *handlers.Health
-	Audit          *handlers.Audit
+	Routes         []RouteRegistrar
 	AllowedOrigins []string
 }
 
@@ -22,12 +27,8 @@ type RouterConfig struct {
 func NewRouter(cfg RouterConfig) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /healthz", cfg.Health.Live)
-	mux.HandleFunc("GET /readyz", cfg.Health.Ready)
-
-	if cfg.Audit != nil {
-		mux.HandleFunc("POST /api/audit", cfg.Audit.Record)
-		mux.HandleFunc("GET /api/audit", cfg.Audit.List)
+	for _, r := range cfg.Routes {
+		r.RegisterRoutes(mux)
 	}
 
 	var handler http.Handler = mux
