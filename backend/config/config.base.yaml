@@ -1,0 +1,27 @@
+# Base configuration shared by every environment. Per-environment files
+# (config.local.yaml, config.development.yaml, config.staging.yaml,
+# config.production.yaml) overlay on top of this file; any field they omit
+# keeps its base value.
+env: local
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  readTimeout: 10s
+  writeTimeout: 10s
+  shutdownTimeout: 15s
+  allowedOrigins: []
+
+log:
+  level: info
+  format: console
+
+postgres:
+  enabled: false
+  dsn: ""
+
+redis:
+  enabled: false
+  addr: ""
+  password: ""
+  db: 0

@@ -1,0 +1,9 @@
+env: production
+
+log:
+  level: info
+  format: json
+
+# Secrets (postgres.dsn, redis.password, etc) must never be committed here —
+# set them via environment variables (APP_POSTGRES_DSN, APP_REDIS_PASSWORD,
+# ...) or a .env file excluded from version control. See backend/.env.example.

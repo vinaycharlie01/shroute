@@ -1,0 +1,16 @@
+directory: frontend
+
+setup:
+  install: true
+
+dev:
+  script: dev
+
+build:
+  script: build
+
+test:
+  script: test
+
+lint:
+  script: lint

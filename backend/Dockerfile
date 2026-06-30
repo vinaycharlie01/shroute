@@ -3,10 +3,10 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 RUN microdnf install -y ca-certificates && microdnf clean all
 
 ARG TARGETARCH=amd64
-COPY dist/linux_${TARGETARCH}/sh-mcp-go /usr/local/bin/sh-mcp-go
+COPY backend/dist/linux_${TARGETARCH}/omnirouter /usr/local/bin/omnirouter
 
-EXPOSE 8080 8081
+EXPOSE 8080
 
 USER 1000:1000
 
-ENTRYPOINT ["/usr/local/bin/sh-mcp-go"]
+ENTRYPOINT ["/usr/local/bin/omnirouter"]

@@ -1,22 +1,22 @@
 version: 2
 
-project_name: sh-mcp-go
+project_name: omnirouter
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - id: sh-mcp-go
-    main: ./cmd/sh-mcp-go
-    binary: sh-mcp-go
+  - id: omnirouter
+    main: ./backend/cmd/server
+    binary: omnirouter
     goos: [linux, darwin, windows]
     goarch: [amd64, arm64]
     ldflags:
       - -s -w
-      - -X github.com/vinaycharlie01/sh-mcp-go/pkg/version.Version={{.Version}}
-      - -X github.com/vinaycharlie01/sh-mcp-go/pkg/version.Commit={{.Commit}}
-      - -X github.com/vinaycharlie01/sh-mcp-go/pkg/version.BuildDate={{.Date}}
+      - -X github.com/vinaycharlie01/shroute/backend/internal/version.Version={{.Version}}
+      - -X github.com/vinaycharlie01/shroute/backend/internal/version.Commit={{.Commit}}
+      - -X github.com/vinaycharlie01/shroute/backend/internal/version.BuildDate={{.Date}}
 
 archives:
   - formats: [tar.gz]
@@ -36,4 +36,4 @@ changelog:
 release:
   github:
     owner: vinaycharlie01
-    name: sh-mcp-go
+    name: shroute

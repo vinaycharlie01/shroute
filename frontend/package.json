@@ -1,0 +1,12 @@
+{
+  "name": "omnirouter-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "description": "OmniRouter frontend scaffold. See README.md for the migration plan from the existing OmniRoute/ Next.js app.",
+  "scripts": {
+    "dev": "echo \"frontend: not yet migrated, see frontend/README.md\"",
+    "build": "echo \"frontend: not yet migrated, see frontend/README.md\"",
+    "lint": "echo \"frontend: not yet migrated, see frontend/README.md\"",
+    "test": "echo \"frontend: not yet migrated, see frontend/README.md\""
+  }
+}

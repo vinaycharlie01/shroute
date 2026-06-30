@@ -1,0 +1,9 @@
+env: local
+
+log:
+  level: debug
+  format: console
+
+server:
+  allowedOrigins:
+    - "http://localhost:3000"
