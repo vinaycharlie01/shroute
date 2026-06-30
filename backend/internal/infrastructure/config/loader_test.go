@@ -118,6 +118,63 @@ log:
 	}
 }
 
+func TestLoad_MongoURIEnvVarImpliesEnabled(t *testing.T) {
+	dir := writeConfigDir(t, baseYAML, "", "")
+
+	t.Setenv("APP_MONGO_URI", "mongodb://localhost:27017/omnirouter")
+
+	cfg, err := config.Load(dir, "", "local")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if !cfg.Mongo.Enabled {
+		t.Error("Mongo.Enabled = false, want true when APP_MONGO_URI is set")
+	}
+	if cfg.Mongo.URI != "mongodb://localhost:27017/omnirouter" {
+		t.Errorf("Mongo.URI = %q, want env override", cfg.Mongo.URI)
+	}
+}
+
+func TestLoad_RedisAddrEnvVarImpliesEnabled(t *testing.T) {
+	dir := writeConfigDir(t, baseYAML, "", "")
+
+	t.Setenv("APP_REDIS_ADDR", "localhost:6379")
+
+	cfg, err := config.Load(dir, "", "local")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if !cfg.Redis.Enabled {
+		t.Error("Redis.Enabled = false, want true when APP_REDIS_ADDR is set")
+	}
+	if cfg.Redis.Addr != "localhost:6379" {
+		t.Errorf("Redis.Addr = %q, want env override", cfg.Redis.Addr)
+	}
+}
+
+func TestLoad_AllowedOriginsEnvVarIsCommaSeparated(t *testing.T) {
+	dir := writeConfigDir(t, baseYAML, "", "")
+
+	t.Setenv("APP_SERVER_ALLOWED_ORIGINS", "https://a.example.com,https://b.example.com")
+
+	cfg, err := config.Load(dir, "", "local")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	want := []string{"https://a.example.com", "https://b.example.com"}
+	if len(cfg.Server.AllowedOrigins) != len(want) {
+		t.Fatalf("AllowedOrigins = %v, want %v", cfg.Server.AllowedOrigins, want)
+	}
+	for i, origin := range want {
+		if cfg.Server.AllowedOrigins[i] != origin {
+			t.Errorf("AllowedOrigins[%d] = %q, want %q", i, cfg.Server.AllowedOrigins[i], origin)
+		}
+	}
+}
+
 func TestLoad_DefaultsToLocalEnvWhenUnset(t *testing.T) {
 	dir := writeConfigDir(t, baseYAML, "", "")
 

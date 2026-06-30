@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
@@ -42,7 +42,9 @@ func Load(configDir, dotenvPath, env string) (*Config, error) {
 		return nil, err
 	}
 
-	applyEnvOverrides(cfg)
+	if err := applyEnvOverrides(cfg); err != nil {
+		return nil, err
+	}
 
 	if err := validate.Struct(cfg); err != nil {
 		return nil, fmt.Errorf("config: validation failed: %w", err)
@@ -71,38 +73,24 @@ func mergeYAML(cfg *Config, path string) error {
 	return nil
 }
 
-// applyEnvOverrides applies a small, explicit set of environment-variable
-// overrides on top of the merged YAML config. Only operational and
-// security-sensitive fields (host/port/log level/credentials) are
-// overridable this way; the rest of the configuration surface lives in
-// YAML so it stays diffable and reviewable.
-func applyEnvOverrides(cfg *Config) {
-	if v := os.Getenv("APP_ENV"); v != "" {
-		cfg.Env = v
+// applyEnvOverrides applies environment-variable overrides on top of the
+// merged YAML config. Field-level overrides are driven entirely by the
+// `env` struct tags on Config (see config.go) via caarlos0/env: adding
+// override support for a new field is a one-line tag addition here, not a
+// new branch in this function. Only the Mongo/Redis "providing a URI/addr
+// implies the dependency is enabled" cascade is bespoke logic, since that
+// relationship can't be expressed as a single field's struct tag.
+func applyEnvOverrides(cfg *Config) error {
+	if err := env.Parse(cfg); err != nil {
+		return fmt.Errorf("config: env overrides: %w", err)
 	}
-	if v := os.Getenv("APP_SERVER_HOST"); v != "" {
-		cfg.Server.Host = v
-	}
-	if v := os.Getenv("APP_SERVER_PORT"); v != "" {
-		if port, err := strconv.Atoi(v); err == nil {
-			cfg.Server.Port = port
-		}
-	}
-	if v := os.Getenv("APP_LOG_LEVEL"); v != "" {
-		cfg.Log.Level = v
-	}
-	if v := os.Getenv("APP_LOG_FORMAT"); v != "" {
-		cfg.Log.Format = v
-	}
-	if v := os.Getenv("APP_MONGO_URI"); v != "" {
-		cfg.Mongo.URI = v
+
+	if os.Getenv("APP_MONGO_URI") != "" {
 		cfg.Mongo.Enabled = true
 	}
-	if v := os.Getenv("APP_REDIS_ADDR"); v != "" {
-		cfg.Redis.Addr = v
+	if os.Getenv("APP_REDIS_ADDR") != "" {
 		cfg.Redis.Enabled = true
 	}
-	if v := os.Getenv("APP_REDIS_PASSWORD"); v != "" {
-		cfg.Redis.Password = v
-	}
+
+	return nil
 }

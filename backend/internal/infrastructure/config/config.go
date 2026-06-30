@@ -36,44 +36,50 @@ func (d Duration) Duration() time.Duration {
 	return time.Duration(d)
 }
 
-// Config is the root, strongly-typed application configuration.
+// Config is the root, strongly-typed application configuration. The `env`
+// struct tags are read by Load via github.com/caarlos0/env: any field
+// carrying one is automatically overridable by that environment variable
+// with no code change to the loader. Add an `env` tag to make a new field
+// overridable; omit it to keep a field YAML-only.
 type Config struct {
-	Env    string       `yaml:"env" validate:"required,oneof=local development staging production"`
+	Env    string       `yaml:"env"    env:"APP_ENV"    validate:"required,oneof=local development staging production"`
 	Server ServerConfig `yaml:"server" validate:"required"`
-	Log    LogConfig    `yaml:"log" validate:"required"`
+	Log    LogConfig    `yaml:"log"    validate:"required"`
 	Mongo  MongoConfig  `yaml:"mongo"`
 	Redis  RedisConfig  `yaml:"redis"`
 }
 
 // ServerConfig controls the inbound HTTP server.
 type ServerConfig struct {
-	Host            string   `yaml:"host" validate:"required"`
-	Port            int      `yaml:"port" validate:"required,min=1,max=65535"`
+	Host            string   `yaml:"host" env:"APP_SERVER_HOST" validate:"required"`
+	Port            int      `yaml:"port" env:"APP_SERVER_PORT" validate:"required,min=1,max=65535"`
 	ReadTimeout     Duration `yaml:"readTimeout" validate:"required"`
 	WriteTimeout    Duration `yaml:"writeTimeout" validate:"required"`
 	ShutdownTimeout Duration `yaml:"shutdownTimeout" validate:"required"`
-	AllowedOrigins  []string `yaml:"allowedOrigins"`
+	AllowedOrigins  []string `yaml:"allowedOrigins" env:"APP_SERVER_ALLOWED_ORIGINS" envSeparator:","`
 }
 
 // LogConfig controls the structured logger.
 type LogConfig struct {
-	Level  string `yaml:"level" validate:"required,oneof=debug info warn error"`
-	Format string `yaml:"format" validate:"required,oneof=json console"`
+	Level  string `yaml:"level"  env:"APP_LOG_LEVEL"  validate:"required,oneof=debug info warn error"`
+	Format string `yaml:"format" env:"APP_LOG_FORMAT" validate:"required,oneof=json console"`
 }
 
 // MongoConfig controls the MongoDB outbound adapter. Enabled defaults to
 // false so the foundation runs with zero external dependencies until a
-// feature actually needs persistence.
+// feature actually needs persistence. Setting APP_MONGO_URI implies Enabled
+// (see loader.go); Enabled itself has no env tag so it can't be flipped
+// independently of providing a URI.
 type MongoConfig struct {
 	Enabled bool   `yaml:"enabled"`
-	URI     string `yaml:"uri" validate:"required_if=Enabled true"`
+	URI     string `yaml:"uri" env:"APP_MONGO_URI" validate:"required_if=Enabled true"`
 }
 
 // RedisConfig controls the Redis outbound adapter. Enabled defaults to false
-// for the same reason as MongoConfig.
+// for the same reason as MongoConfig; setting APP_REDIS_ADDR implies Enabled.
 type RedisConfig struct {
 	Enabled  bool   `yaml:"enabled"`
-	Addr     string `yaml:"addr" validate:"required_if=Enabled true"`
-	Password string `yaml:"password"`
-	DB       int    `yaml:"db"`
+	Addr     string `yaml:"addr"     env:"APP_REDIS_ADDR"     validate:"required_if=Enabled true"`
+	Password string `yaml:"password" env:"APP_REDIS_PASSWORD"`
+	DB       int    `yaml:"db"       env:"APP_REDIS_DB"`
 }
