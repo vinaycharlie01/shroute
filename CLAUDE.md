@@ -2,8 +2,9 @@
 
 Guidance for Claude Code (and any AI agent) working in this repository.
 These rules OVERRIDE default behavior — follow them exactly. The same
-ruleset, condensed, lives in `.clinerules` for Cline; keep both in sync if
-you change one.
+ruleset, condensed, lives in `.clinerules/` for Cline; keep both in sync if
+you change one. Project-level Claude Code config (custom commands, agents,
+settings) lives under `.claude/` — see `.claude/README.md`.
 
 ## Repo Map — what's actually being developed here
 
