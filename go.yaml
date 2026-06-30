@@ -1,0 +1,76 @@
+directory: backend
+
+setup:
+  modDownload: true
+
+build:
+  output: dist/omnirouter
+  main: ./cmd/server
+  versionPkg: github.com/vinaycharlie01/shroute/backend/internal/version
+  noCGO: true
+
+test:
+  packages:
+    - ./...
+  args:
+    - "-v"
+    - "-timeout=120s"
+
+integration:
+  packages:
+    - ./...
+  args:
+    - "-tags=integration"
+    - "-v"
+    - "-timeout=300s"
+
+race:
+  packages:
+    - ./...
+  args:
+    - "-timeout=180s"
+
+coverage:
+  packages:
+    - ./...
+  output: coverage.out
+  args:
+    - "-timeout=180s"
+
+bench:
+  packages:
+    - ./...
+  args:
+    - "-timeout=120s"
+
+lint:
+  args: []
+
+vet:
+  packages:
+    - ./...
+
+format:
+  args: []
+
+govulncheck:
+  packages:
+    - ./...
+
+crossBuild:
+  # CrossBuildFromConfig (nava/mage/golang) does not honor the top-level
+  # `directory` field, so main/outputDir are repo-root-relative here while
+  # every other section above is relative to backend/.
+  main: ./backend/cmd/server
+  binary: omnirouter
+  outputDir: backend/dist
+  versionPkg: github.com/vinaycharlie01/shroute/backend/internal/version
+  platforms:
+    - os: linux
+      arch: amd64
+    - os: linux
+      arch: arm64
+    - os: darwin
+      arch: amd64
+    - os: darwin
+      arch: arm64

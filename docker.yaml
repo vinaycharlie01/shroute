@@ -1,8 +1,8 @@
 buildxBuild:
   context: .
-  dockerfile: Dockerfile
+  dockerfile: backend/Dockerfile
   tags:
-    - ghcr.io/vinaycharlie01/sh-mcp-go:latest
+    - ghcr.io/vinaycharlie01/omnirouter:latest
   platforms:
     - linux/amd64
     - linux/arm64
@@ -10,7 +10,7 @@ buildxBuild:
   noCache: false
 
 push:
-  image: ghcr.io/vinaycharlie01/sh-mcp-go:latest
+  image: ghcr.io/vinaycharlie01/omnirouter:latest
   allTags: false
 
 login:

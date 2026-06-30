@@ -65,3 +65,8 @@ linters:
       rules:
         - name: exported
           disabled: true
+  exclusions:
+    paths:
+      # Vendored Nava Mage tooling: reused/extended per the build-system
+      # requirement, not rewritten as part of this service's codebase.
+      - "nava/.*"
