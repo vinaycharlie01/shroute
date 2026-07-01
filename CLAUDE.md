@@ -11,7 +11,7 @@ settings) lives under `.claude/` — see `.claude/README.md`.
 | Path         | What it is                                                                                          |
 | ------------ | ---------------------------------------------------------------------------------------------------- |
 | `backend/`   | **The product.** Go service, Hexagonal Architecture. Everything below applies here.                   |
-| `frontend/`  | New Go-backend's frontend (scaffold stage).                                                           |
+| `frontend/`  | Next.js dashboard — full OmniRoute app migrated here for full-stack development (see `frontend/README.md`). |
 | `backend/tasks/` | Per-feature migration task files (easy→complex), each an 8-step end-to-end-flow template.          |
 | `OmniRoute/` | **Reference only** — the original Next.js/TS app being migrated from. Has its own `CLAUDE.md` (TS-specific rules) that applies *inside that subtree only*. Do not apply Go rules there; do not port its rules here. |
 | `nava/`      | **Vendored** Mage build tooling, reused/extended, not rewritten. Excluded from `.golangci.yml` linting. |

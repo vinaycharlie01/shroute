@@ -6,11 +6,35 @@ original TS app — built slice-by-slice.
 
 ---
 
-## Quick Start
+## Repo Layout
+
+```
+backend/          Go service (the product — Hexagonal Architecture)
+  cmd/server/     main.go entrypoint
+  config/         YAML config files (base, dev, prod, …)
+  docs/           Auto-generated OpenAPI/Swagger spec (mage gen)
+  internal/       Hexagonal layers (domain → application → adapters → infrastructure)
+  tasks/          Migration task specs (00-INDEX.md … 21-agent-bridge.md)
+  test/           Integration tests + testcontainer helpers
+frontend/         Next.js dashboard (migrated from OmniRoute/)
+OmniRoute/        Reference only — original TS app being migrated from
+nava/             Vendored Mage build tooling
+```
+
+---
+
+## Quick Start — Go Backend Only
 
 ```bash
 # Build
 go build ./...
+
+# Run (no external deps — health + basic routes)
+go run ./backend/cmd/server
+
+# Run with MongoDB + Redis (settings, cache, audit slices)
+APP_MONGO_URI=mongodb://localhost:27017 APP_REDIS_ADDR=localhost:6379 \
+  go run ./backend/cmd/server
 
 # Unit tests
 go test ./backend/...
@@ -19,10 +43,10 @@ go test ./backend/...
 go test -tags=integration ./backend/test/integration/...
 
 # Lint
-golangci-lint run --timeout=10m
+$(go env GOPATH)/bin/golangci-lint run --timeout=10m
 
-# Run
-go run ./backend/cmd/server
+# Regenerate OpenAPI docs
+mage gen
 ```
 
 Config is YAML-first (`backend/config/config.base.yaml` + per-env overlay) with automatic
@@ -30,7 +54,37 @@ env-var overrides via `APP_*` struct tags. See [`backend/internal/infrastructure
 
 ---
 
-## Architecture
+## Quick Start — Full Stack (Go Backend + Next.js Frontend)
+
+**Terminal 1 — Go backend (port 8080):**
+
+```bash
+APP_MONGO_URI=mongodb://localhost:27017 APP_REDIS_ADDR=localhost:6379 \
+  go run ./backend/cmd/server
+```
+
+**Terminal 2 — Next.js frontend (port 20128):**
+
+```bash
+cd frontend
+cp .env.example .env          # then set JWT_SECRET, API_KEY_SECRET, INITIAL_PASSWORD
+npm install
+npm run dev                   # http://localhost:20128
+```
+
+Or via Mage:
+
+```bash
+mage frontend:setup           # npm install in frontend/
+mage frontend:dev             # npm run dev in frontend/
+```
+
+See [`frontend/README.md`](frontend/README.md) for full setup details and the API route split
+(which routes are served by the Go backend vs the Next.js built-in API routes).
+
+---
+
+## Architecture — Go Backend
 
 ```
 backend/internal/
@@ -58,8 +112,8 @@ each one reuses ports/adapters established by earlier slices.
 | # | Slice | Status | Notes |
 |---|-------|--------|-------|
 | 01 | Health, Logs & Audit | ✅ Done | `GET/POST /api/audit`, `GET /healthz`, `GET /readyz` |
-| 02 | Cache Management | ✅ Done | `GET /api/cache/stats`, `GET /api/cache`, `DELETE /api/cache` |
-| **03** | **Settings & Feature Flags** | **✅ Done** | See [Task 03 detail](#task-03-settings--feature-flags) below |
+| 02 | Cache Management | ✅ Done | `GET /api/cache/stats`, `GET /api/cache/entries`, `DELETE /api/cache/flush` |
+| **03** | **Settings & Feature Flags** | **✅ Done** | 7 routes — see [Task 03 detail](#task-03-settings--feature-flags) below |
 | 04 | API Keys | 🔲 Pending | CRUD + scopes |
 | 05 | Models & Mappings | 🔲 Pending | Catalog CRUD + mapping tables |
 | 06 | Usage & Quota | 🔲 Pending | Tracking/aggregation queries |
@@ -85,8 +139,8 @@ each one reuses ports/adapters established by earlier slices.
 
 **100% migrated.** Full coverage of the `/api/settings` surface from
 [`OmniRoute/vinaydoc/SLICE_10_SETTINGS.md`](OmniRoute/vinaydoc/SLICE_10_SETTINGS.md)
-that falls within Task 03 scope (general config + feature flags).
-The remaining OmniRoute settings routes (`/api/db-backups`, `/api/system`,
+within Task 03 scope (general config + feature flags).
+Remaining OmniRoute settings routes (`/api/db-backups`, `/api/system`,
 `/api/restart`, `/api/shutdown`, `/api/version-manager`) are deferred to Task 15.
 
 ### API Routes
@@ -101,7 +155,7 @@ The remaining OmniRoute settings routes (`/api/db-backups`, `/api/system`,
 | `GET` | `/api/settings/flags/{name}` | `getFlag(name)` | `Settings.GetFlag` |
 | `PUT` | `/api/settings/flags/{name}` | `setFlag(name, enabled)` | `Settings.SetFlag` |
 
-### Setting Keys (known-key registry)
+### Setting Keys
 
 Unknown keys are rejected at the service layer (mirrors Zod-schema discipline from the TS routes).
 
@@ -122,8 +176,8 @@ Seeded on every startup using `$setOnInsert` (operator-modified values are never
 
 | Flag | Default | Notes |
 |------|---------|-------|
-| `PII_REDACTION_ENABLED` | `false` | **Must stay `false`** — opt-in only (Hard Rule #20) |
-| `PII_RESPONSE_SANITIZATION` | `false` | **Must stay `false`** — opt-in only (Hard Rule #20) |
+| `PII_REDACTION_ENABLED` | `false` | **Must stay `false`** — opt-in only |
+| `PII_RESPONSE_SANITIZATION` | `false` | **Must stay `false`** — opt-in only |
 | `RATE_LIMIT_ENABLED` | `false` | Off by default |
 | `CACHE_ENABLED` | `true` | On by default |
 | `AUDIT_LOG_ENABLED` | `true` | On by default |
@@ -144,14 +198,11 @@ Seeded on every startup using `$setOnInsert` (operator-modified values are never
 | Test | File | What it verifies |
 |------|------|-----------------|
 | Domain unit | `internal/domain/settings/settings_test.go` | `IsKnownKey`, `CategoryFor`, PII flags `Enabled=false` guard |
-| Service unit | `internal/application/settings/service_test.go` | All CRUD paths, unknown-key rejection, empty-value rejection, PII default-false guard |
+| Service unit | `internal/application/settings/service_test.go` | All CRUD paths, unknown-key rejection, empty-value rejection |
 | Handler unit | `internal/adapters/inbound/http/handlers/settings_test.go` | All 7 route handlers, error status codes |
-| Integration | `backend/test/integration/settings_test.go` | `Set→Get→Delete` round-trip; `SeedDefaults` `$setOnInsert` idempotency against real MongoDB |
+| Integration | `backend/test/integration/settings_test.go` | `Set→Get→Delete` round-trip; `SeedDefaults` idempotency against real MongoDB |
 
 ### What Task 03 Does NOT Cover (→ Task 15)
-
-The following OmniRoute routes from `SLICE_10_SETTINGS.md` are out of scope for Task 03
-and will be migrated in **Task 15 (DevOps & Infra)**:
 
 | Route | Reason deferred |
 |-------|-----------------|
@@ -163,22 +214,6 @@ and will be migrated in **Task 15 (DevOps & Infra)**:
 | `POST /api/shutdown` | Process shutdown |
 | `GET /api/version-manager` | Version catalog + current version |
 | `POST /api/version-manager/update` | In-place binary update |
-
----
-
-## Repo Layout
-
-```
-backend/          Go service (the product)
-  cmd/server/     main.go entrypoint
-  config/         YAML config files (base, dev, prod, …)
-  internal/       Hexagonal layers (see Architecture above)
-  tasks/          Migration task specs (00-INDEX.md … 21-agent-bridge.md)
-  test/           Integration tests + testcontainer helpers
-frontend/         New frontend (scaffold stage)
-OmniRoute/        Reference only — original TS app being migrated from
-nava/             Vendored Mage build tooling
-```
 
 ---
 
@@ -196,4 +231,25 @@ go test -tags=integration ./backend/test/integration/...
 
 # With coverage
 go test -cover ./backend/...
+
+# Frontend tests
+cd frontend && npm run test:unit    # Node native runner
+cd frontend && npm run test:vitest  # Vitest (MCP, autoCombo, cache)
 ```
+
+---
+
+## OpenAPI / Swagger
+
+The API spec is auto-generated from swag annotations and lives in `backend/docs/`.
+
+```bash
+# Regenerate after changing handler annotations
+mage gen
+
+# Or directly
+go generate ./backend/cmd/server/...
+```
+
+View locally: start the backend and open `http://localhost:8080/swagger/index.html`
+(Swagger UI is served by the Go server when `APP_ENV=development`).

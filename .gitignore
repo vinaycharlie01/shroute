@@ -31,10 +31,14 @@ go.work.sum
 /dist/
 backend/dist/
 
-# Frontend
+# Frontend (Next.js app migrated from OmniRoute/)
 frontend/node_modules/
 frontend/dist/
 frontend/.next/
+frontend/.build/
+frontend/coverage/
+frontend/.stryker-tmp/
+frontend/stryker-incremental.json
 
 # Swag auto-generated OpenAPI docs (regenerated via mage gen)
 backend/docs/docs.go
