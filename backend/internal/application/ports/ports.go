@@ -10,6 +10,7 @@ import (
 
 	"github.com/vinaycharlie01/shroute/backend/internal/domain/audit"
 	"github.com/vinaycharlie01/shroute/backend/internal/domain/cache"
+	"github.com/vinaycharlie01/shroute/backend/internal/domain/settings"
 )
 
 // Pinger is implemented by any outbound dependency adapter that can report
@@ -45,4 +46,27 @@ type CacheStore interface {
 	Stats(ctx context.Context) (cache.Stats, error)
 	List(ctx context.Context, prefix string, limit int) ([]cache.Entry, error)
 	Flush(ctx context.Context, prefix string) error
+}
+
+// SettingsRepository persists and retrieves settings documents keyed by a
+// well-known string key.
+//
+//counterfeiter:generate . SettingsRepository
+type SettingsRepository interface {
+	Get(ctx context.Context, key string) (settings.Document, error)
+	Set(ctx context.Context, doc settings.Document) (settings.Document, error)
+	Delete(ctx context.Context, key string) error
+	List(ctx context.Context) ([]settings.Document, error)
+}
+
+// FeatureFlagRepository persists and retrieves feature flag state.
+// SeedDefaults inserts defaults using $setOnInsert semantics so existing
+// operator-modified values are never overwritten.
+//
+//counterfeiter:generate . FeatureFlagRepository
+type FeatureFlagRepository interface {
+	Get(ctx context.Context, name string) (settings.FeatureFlag, error)
+	List(ctx context.Context) ([]settings.FeatureFlag, error)
+	Set(ctx context.Context, flag settings.FeatureFlag) (settings.FeatureFlag, error)
+	SeedDefaults(ctx context.Context, defaults []settings.FeatureFlag) error
 }
