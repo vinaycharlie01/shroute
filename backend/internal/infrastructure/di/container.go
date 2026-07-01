@@ -23,6 +23,7 @@ import (
 var defaultFeatures = []Feature{
 	auditFeature{},
 	cacheFeature{},
+	settingsFeature{},
 }
 
 // Container holds every wired component needed to run the service.

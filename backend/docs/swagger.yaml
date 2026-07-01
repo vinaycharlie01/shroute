@@ -37,6 +37,50 @@ definitions:
       error:
         type: string
     type: object
+  handlers.flagResponse:
+    properties:
+      default_value:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+    type: object
+  handlers.flagsListResponse:
+    properties:
+      flags:
+        items:
+          $ref: '#/definitions/handlers.flagResponse'
+        type: array
+    type: object
+  handlers.setFlagRequest:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  handlers.setValueRequest:
+    properties:
+      value:
+        type: object
+    type: object
+  handlers.settingResponse:
+    properties:
+      category:
+        type: string
+      key:
+        type: string
+      updated_at:
+        type: string
+      value:
+        type: object
+    type: object
+  handlers.settingsListResponse:
+    properties:
+      settings:
+        items:
+          $ref: '#/definitions/handlers.settingResponse'
+        type: array
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -44,7 +88,7 @@ info:
     url: https://github.com/vinaycharlie01
   description: |-
     OmniRouter backend exposing cache management, health
-    checks, and audit trail endpoints.
+    checks, audit trail, and settings & feature flag endpoints.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -125,6 +169,192 @@ paths:
       summary: Get cache statistics
       tags:
       - Cache
+  /api/settings:
+    get:
+      description: Returns all stored application settings across every category.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.settingsListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: List all settings
+      tags:
+      - Settings
+  /api/settings/{key}:
+    delete:
+      description: Removes a setting by its well-known key. Returns 204 on success.
+      parameters:
+      - description: Setting key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Unknown setting key
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Delete a setting
+      tags:
+      - Settings
+    get:
+      description: Returns a single setting document by its well-known key.
+      parameters:
+      - description: Setting key (e.g. log_level, theme)
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.settingResponse'
+        "400":
+          description: Unknown setting key
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "404":
+          description: Setting not found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Get a setting
+      tags:
+      - Settings
+    put:
+      consumes:
+      - application/json
+      description: Creates or updates the JSON value for a well-known setting key.
+      parameters:
+      - description: Setting key (e.g. log_level, theme)
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: JSON value to store
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.setValueRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.settingResponse'
+        "400":
+          description: Unknown key, empty value, or invalid JSON
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Set a setting
+      tags:
+      - Settings
+  /api/settings/flags:
+    get:
+      description: Returns all feature flags and their current enabled state.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.flagsListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: List feature flags
+      tags:
+      - Settings
+  /api/settings/flags/{name}:
+    get:
+      description: Returns a single feature flag by name, including its enabled state
+        and seeded default.
+      parameters:
+      - description: Flag name (e.g. CACHE_ENABLED, PII_REDACTION_ENABLED)
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.flagResponse'
+        "404":
+          description: Flag not found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Get a feature flag
+      tags:
+      - Settings
+    put:
+      consumes:
+      - application/json
+      description: Enables or disables a feature flag by name. PII flags are opt-in
+        — do not enable by default.
+      parameters:
+      - description: Flag name (e.g. CACHE_ENABLED)
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Enabled state to apply
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.setFlagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.flagResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Set a feature flag
+      tags:
+      - Settings
 schemes:
 - http
 swagger: "2.0"

@@ -5,7 +5,7 @@
 // @title           OmniRouter API
 // @version         1.0.0
 // @description     OmniRouter backend exposing cache management, health
-// @description     checks, and audit trail endpoints.
+// @description     checks, audit trail, and settings & feature flag endpoints.
 // @termsOfService  https://github.com/vinaycharlie01/shroute
 
 // @contact.name   Vinay Kumar V
